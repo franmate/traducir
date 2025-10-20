@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor XLIFF Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .upload-section {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 2px dashed #4a6491;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section.loading {
+            border-color: #ffc107;
+            background-color: #fffbf0;
+        }
+        
+        .file-input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .file-label {
+            display: inline-block;
+            background: #4a6491;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .file-label:hover {
+            background: #3a5481;
+            transform: translateY(-2px);
+        }
+        
+        #file-name {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+            text-align: center;
+        }
+        
+        .loading-indicator {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+            color: #856404;
+            font-weight: 600;
+        }
+        
+        .loading-indicator.active {
+            display: flex;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #856404;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background:#6F00B0;
+            color:white;
+        }
+        
+        
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4a6491;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .editor-container {
+            margin-top: 30px;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .translation-items {
+            /*max-height: 500px;*/
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .translation-item {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 20px;
+            background: white;
+            transition: background 0.2s;
+        }
+        
+        .translation-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .translation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-id {
+            font-weight: bold;
+            color: #4a6491;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .source-text {
+            background: #f1f8ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 4px solid #4a6491;
+        }
+        
+        .target-text {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .target-text:focus {
+            outline: none;
+            border-color: #4a6491;
+            box-shadow: 0 0 0 2px rgba(74, 100, 145, 0.2);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #b0b0b0;
+        }
+        
+        .format-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            margin-top: 30px;
+            font-size: 0.9rem;
+        }
+        .numero{
+			font-size:1.6em;
+		}
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Editor XLIFF Online</h1>
+        </header>
+        
+        <div class="main-content">
+            <section class="upload-section" id="upload-section">
+                <div class="file-input-container">
+                    <label for="xliff-file" class="file-label">
+                        <i class="fas fa-cloud-upload-alt"></i> Seleccionar ficheiro XLIFF
+                    </label>
+                    <input type="file" id="xliff-file" accept=".xlf,.xliff" style="display: none;">
+                    <div id="file-name">É preciso seleccionar un ficheiro XLIFF</div>
+                </div>
+                
+                <div class="loading-indicator" id="loading-indicator">
+                    <div class="spinner"></div>
+                    <span>Procesando ficheiro...</span>
+                </div>
+                
+                <div class="controls">
+					
+                    <button id="download-btn" class="btn-success" disabled>
+                        <i class="fas fa-file-download"></i> Descargar XLIFF
+                    </button>
+                    <button id="export-csv-btn" class="btn-info" disabled>
+                        <i class="fas fa-file-export"></i> Exportar a CSV
+                    </button>
+                    <button id="import-csv-btn" class="btn-warning">
+                        <i class="fas fa-file-import"></i> Importar CSV
+                    </button>
+                    <button id="clear-btn" class="btn-secondary">
+                        <i class="fas fa-broom"></i> Limpiar
+                    </button>
+                </div>
+                <!--
+               <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-units">0</div>
+                        <div class="stat-label">Unidades totales</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="translated-units">0</div>
+                        <div class="stat-label">Traducidas</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="pending-units">0</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="progress">0%</div>
+                        <div class="stat-label">Progreso</div>
+                    </div>
+                </div>
+                -->
+                <div class="format-info">
+
+                </div>
+            </section>
+            
+            <section class="editor-container">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Procura en textos orixinais o traducidos...">
+                    <button id="search-btn" class="btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                
+                <div class="translation-items" id="translation-container">
+                    <div class="empty-state">
+                        <i class="fas fa-language"></i>
+                        <h3>Falta o ficheiro</h3>
+                        <p>SEscolle un ficheiro XLIFF para comezar coa tradución</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Editor XLIFF Online. Creative Commons BY 4.0</p>
+    </footer>
+
+    <script>
+        class XLIFFEditor {
+            constructor() {
+                this.translationUnits = [];
+                this.filteredUnits = [];
+                this.currentFile = null;
+                this.initializeEventListeners();
+            }
+            
+            initializeEventListeners() {
+                document.getElementById('xliff-file').addEventListener('change', (e) => {
+                    this.handleFileSelect(e);
+                });
+                
+                document.getElementById('download-btn').addEventListener('click', () => {
+                    this.downloadTranslatedXLIFF();
+                });
+                
+                document.getElementById('export-csv-btn').addEventListener('click', () => {
+                    this.exportToCSV();
+                });
+                
+                document.getElementById('import-csv-btn').addEventListener('click', () => {
+                    this.importFromCSV();
+                });
+                
+                document.getElementById('clear-btn').addEventListener('click', () => {
+                    this.clearEditor();
+                });
+                
+                document.getElementById('search-btn').addEventListener('click', () => {
+                    this.filterUnits();
+                });
+                
+                document.getElementById('search-input').addEventListener('keyup', (e) => {
+                    if (e.key === 'Enter') {
+                        this.filterUnits();
+                    }
+                });
+            }
+            
+            async handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                this.currentFile = file;
+                document.getElementById('file-name').textContent = `Cargando: ${file.name}`;
+                
+                this.showLoading(true);
+                
+                try {
+                    await this.loadXLIFFFile();
+                } catch (error) {
+                    alert('Erro ao cargar o ficheiro: ' + error.message);
+                    console.error(error);
+                    document.getElementById('file-name').textContent = 'Erro ao cargar o ficheiro';
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+            
+            showLoading(show) {
+                const loadingIndicator = document.getElementById('loading-indicator');
+                const uploadSection = document.getElementById('upload-section');
+                
+                if (show) {
+                    loadingIndicator.classList.add('active');
+                    uploadSection.classList.add('loading');
+                } else {
+                    loadingIndicator.classList.remove('active');
+                    uploadSection.classList.remove('loading');
+                }
+            }
+            
+            async loadXLIFFFile() {
+                if (!this.currentFile) return;
+                
+                const fileContent = await this.readFile(this.currentFile);
+                this.parseXLIFF(fileContent);
+                this.renderTranslationUnits();
+                this.updateStats();
+                document.getElementById('download-btn').disabled = false;
+                document.getElementById('export-csv-btn').disabled = false;
+            }
+            
+            readFile(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (e) => reject(new Error('O formato non é correcto'));
+                    reader.readAsText(file);
+                });
+            }
+            
+            parseXLIFF(xliffContent) {
+                this.translationUnits = [];
+                
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xliffContent, 'text/xml');
+                
+                const parseError = xmlDoc.getElementsByTagName('parsererror')[0];
+                if (parseError) {
+                    throw new Error('O formato non é correcto');
+                }
+                
+                const transUnits = xmlDoc.getElementsByTagName('trans-unit');
+                
+                for (let i = 0; i < transUnits.length; i++) {
+                    const unit = transUnits[i];
+                    const id = unit.getAttribute('id');
+                    const sourceElement = unit.getElementsByTagName('source')[0];
+                    const targetElement = unit.getElementsByTagName('target')[0];
+                    
+                    const source = sourceElement ? sourceElement.textContent : '';
+                    let target = targetElement ? targetElement.textContent : '';
+                    
+                    if (!target && source) {
+                        target = '[?]' + source;
+                    }
+                    
+                    this.translationUnits.push({
+						num:i,
+                        id: id,
+                        source: source,
+                        target: target,
+                        originalTarget: target 
+                    });
+                }
+                
+                this.filteredUnits = [...this.translationUnits];
+            }
+            
+            renderTranslationUnits() {
+                const container = document.getElementById('translation-container');
+                
+                if (this.filteredUnits.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <h3>No se encontraron resultados</h3>
+                            <p>Intenta con otros términos de búsqueda</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                this.filteredUnits.forEach((unit, index) => {
+                    const unitElement = document.createElement('div');
+                    unitElement.className = 'translation-item';
+                    unitElement.innerHTML = `
+                        <div><span class="numero">${unit.num} </span><span class="item-id">ID: ${unit.id}</span></div>
+                        <div class="source-text">${this.escapeHtml(unit.source)}</div>
+                        <textarea class="target-text" data-id="${unit.id}" placeholder="Escribe a tradución...">${this.escapeHtml(unit.target)}</textarea>
+                    `;
+                    
+                    const textarea = unitElement.querySelector('.target-text');
+                    textarea.addEventListener('input', (e) => {
+                        this.updateTranslation(unit.id, e.target.value);
+                        this.updateStats();
+                    });
+                    
+                    container.appendChild(unitElement);
+                });
+            }
+            
+            updateTranslation(id, newTranslation) {
+                const unit = this.translationUnits.find(u => u.id === id);
+                if (unit) {
+                    unit.target = newTranslation;
+                }
+            }
+            
+            updateStats() {
+                const total = this.translationUnits.length;
+                const translated = this.translationUnits.filter(unit => 
+                    unit.target && unit.target !== unit.originalTarget && 
+                    !unit.target.startsWith('[PENDIENTE]')
+                ).length;
+                const pending = total - translated;
+                const progress = total > 0 ? Math.round((translated / total) * 100) : 0;
+                /*
+                document.getElementById('total-units').textContent = total;
+                document.getElementById('translated-units').textContent = translated;
+                document.getElementById('pending-units').textContent = pending;
+                document.getElementById('progress').textContent = `${progress}%`;
+                */
+            }
+            
+            filterUnits() {
+                const searchTerm = document.getElementById('search-input').value.toLowerCase();
+                
+                if (!searchTerm) {
+                    this.filteredUnits = [...this.translationUnits];
+                } else {
+                    this.filteredUnits = this.translationUnits.filter(unit => 
+                        unit.source.toLowerCase().includes(searchTerm) || 
+                        unit.target.toLowerCase().includes(searchTerm)
+                    );
+                }
+                
+                this.renderTranslationUnits();
+            }
+            
+            downloadTranslatedXLIFF() {
+                if (this.translationUnits.length === 0) {
+                    alert('No hay datos para descargar');
+                    return;
+                }
+                
+                let xliffContent = `<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file original="application" source-language="en" target-language="es" datatype="plaintext">
+    <body>`;
+                
+                this.translationUnits.forEach(unit => {
+                    xliffContent += `
+      <trans-unit id="${unit.id}">
+        <source>${this.escapeXml(unit.source)}</source>
+        <target>${this.escapeXml(unit.target.replace('[?]',''))}</target>
+      </trans-unit>`;
+                });
+                
+                xliffContent += `
+    </body>
+  </file>
+</xliff>`;
+                
+                const blob = new Blob([xliffContent], { type: 'application/x-xliff+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                const originalName = this.currentFile ? this.currentFile.name.replace('.xlf', '').replace('.xliff', '') : 'translations';
+                a.download = `${originalName}_traducido.xliff`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            exportToCSV() {
+                if (this.translationUnits.length === 0) {
+                    alert('No hay datos para exportar');
+                    return;
+                }
+                
+                let csvContent = '"ID","Texto Orixinal","Texto Traducido"\n';
+                
+                this.translationUnits.forEach(unit => {
+                    const escapedSource = unit.source.replace(/"/g, '""');
+                    const orTarget = unit.target.replace(/"/g, '""');
+                    const escapedTarget = orTarget.replace("[?]","");
+                    
+                    
+                    csvContent += `"${unit.id}","${escapedSource}","${escapedTarget}"\n`;
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                const originalName = this.currentFile ? this.currentFile.name.replace('.xlf', '').replace('.xliff', '') : 'translations';
+                a.download = `${originalName}_exportado.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            importFromCSV() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.csv';
+                
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    this.showLoading(true);
+                    
+                    this.readFile(file).then(content => {
+                        this.parseCSV(content);
+                        this.renderTranslationUnits();
+                        this.updateStats();
+                        document.getElementById('download-btn').disabled = false;
+                        document.getElementById('export-csv-btn').disabled = false;
+                        
+                        document.getElementById('file-name').textContent = `Importado desde: ${file.name} (${this.translationUnits.length} unidades)`;
+                        this.showLoading(false);
+                    }).catch(error => {
+                        alert('Error al importar el archivo CSV: ' + error.message);
+                        console.error(error);
+                        this.showLoading(false);
+                    });
+                };
+                
+                input.click();
+            }
+            
+            parseCSV(csvContent) {
+                this.translationUnits = [];
+                
+                const lines = csvContent.split('\n');
+                
+                if (lines.length < 2) {
+                    throw new Error('El archivo CSV está vacío o no tiene el formato correcto');
+                }
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue; 
+                    
+                    const fields = this.parseCSVLine(line);
+                    
+                    if (fields.length >= 3) {
+                        const id = fields[0];
+                        const source = fields[1];
+                        const target = fields[2];
+                        
+                        this.translationUnits.push({
+                            id: id,
+                            source: source,
+                            target: target,
+                            originalTarget: target
+                        });
+                    }
+                }
+                
+                this.filteredUnits = [...this.translationUnits];
+            }
+            
+            parseCSVLine(line) {
+                const fields = [];
+                let currentField = '';
+                let insideQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        if (insideQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                            currentField += '"';
+                            i++; 
+                        } else {
+                            insideQuotes = !insideQuotes;
+                        }
+                    } else if (char === ',' && !insideQuotes) {
+                        fields.push(currentField);
+                        currentField = '';
+                    } else {
+                        currentField += char;
+                    }
+                }
+                
+                fields.push(currentField);
+                
+                return fields;
+            }
+            
+            clearEditor() {
+                this.translationUnits = [];
+                this.filteredUnits = [];
+                this.currentFile = null;
+                
+                document.getElementById('xliff-file').value = '';
+                document.getElementById('file-name').textContent = 'No se cargou o ficheiro XIFF';
+                document.getElementById('download-btn').disabled = true;
+                document.getElementById('export-csv-btn').disabled = true;
+                document.getElementById('search-input').value = '';
+                
+                this.updateStats();
+                
+                const container = document.getElementById('translation-container');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-language"></i>
+                        <h3>Non hai un ficheiro cargado</h3>
+                        <p>Selecciona un ficheiro XLIFF para comenzar a traducir</p>
+                    </div>
+                `;
+            }
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            escapeXml(text) {
+                return text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&apos;');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new XLIFFEditor();
+        });
+    </script>
+</body>
+</html>
