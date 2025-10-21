@@ -596,7 +596,7 @@
             
             downloadTranslatedXLIFF() {
                 if (this.translationUnits.length === 0) {
-                    alert('No hay datos para descargar');
+                    alert('Non hai datos para descargar');
                     return;
                 }
                 
@@ -634,7 +634,7 @@
             
             exportToCSV() {
                 if (this.translationUnits.length === 0) {
-                    alert('No hay datos para exportar');
+                    alert('Non hai datos para descargar');
                     return;
                 }
                 
@@ -683,7 +683,7 @@
                         document.getElementById('file-name').textContent = `Importado desde: ${file.name} (${this.translationUnits.length} unidades)`;
                         this.showLoading(false);
                     }).catch(error => {
-                        alert('Error al importar el archivo CSV: ' + error.message);
+                        alert('Erro ao importar o ficheiro CSV: ' + error.message);
                         console.error(error);
                         this.showLoading(false);
                     });
