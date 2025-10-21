@@ -624,7 +624,8 @@
                 a.href = url;
                 
                 const originalName = this.currentFile ? this.currentFile.name.replace('.xlf', '').replace('.xliff', '') : 'translations';
-                a.download = `${originalName}_traducido.xliff`;
+                //a.download = `${originalName}_traducido.xliff`;
+                a.download = `${originalName}.xlif`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
